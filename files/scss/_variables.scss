@@ -1,0 +1,64 @@
+// Variables
+
+$path-files: '../';
+$path-images: $path-files + 'images/';
+$path-images-backgrounds: $path_images + 'bg/';
+
+$site-width: 1200px;
+$site-min-width: 375px;
+$grid-gutter-width: 30px;
+$grid-padding: $grid-gutter-width / 2;
+$container-max-widths: (
+	xl: 1200px
+);
+
+$font-family-sans-serif: 'Open Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+$font-family-base: $font-family-sans-serif;
+$font-size-base-value: 14;
+$font-size-base-px: #{$font-size-base-value}px;
+$font-size-body: 1rem;
+$font-sizes: ( 0, 12, 18, 24 );
+$font-weight: ( 300, 400, 500, 700, 900 );
+$line-height: ( 18 );
+$text-decoration: ( none, underline );
+$bg-size: ( contain, cover, auto );
+
+$color-white: #FFF;
+$color-black: #000;
+$color-default: #111;
+$color-blue: #579BE0;
+$color-primary: $color-blue;
+$color-gray: #CCC;
+$color-secondary: $color-gray;
+$_colors: (
+	white: $color-white,
+	black: $color-black,
+	blue: $color-blue,
+	gray: $color-gray
+);
+$_theme-colors: (
+	'primary': $color-primary,
+	'secondary': $color-secondary
+);
+
+$icons: (
+	//( 'name-1', 'icons/name-1.png', 18px, 18px ), // .icon.icon-name-1
+	//( 'name-2', 'icons/name-2.png', 36px, 36px ), // .icon.icon-name-2
+);
+
+$animation-time: 1s;
+$animation-type: cubic-bezier( 0.22, 0.61, 0.36, 1 );
+
+$link-color: $color-blue;
+$link-color-hover: darken( $link-color, 15% );
+$link-decoration: none;
+$link-hover-decoration: underline;
+
+$zindex-widget:                     990;
+$zindex-dropdown:                   1000;
+$zindex-sticky:                     1020;
+$zindex-fixed:                      1030;
+$zindex-modal-backdrop:             1040;
+$zindex-modal:                      1050;
+$zindex-popover:                    1060;
+$zindex-tooltip:                    1070;

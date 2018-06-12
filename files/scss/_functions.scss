@@ -1,0 +1,18 @@
+@function parseInt( $number ){
+	@if type-of( $number ) == 'number' and not unitless( $number ){
+		@return $number/( $number * 0 + 1 );
+	}
+	@return $number;
+}
+
+@function rem( $px ){
+	@return #{parseInt($px)/$font-size-base-value}rem;
+}
+
+@function image( $file ){
+	@return #{$path_images}#{$file};
+}
+
+@function _( $color-name ){
+	@return  color( $color-name );
+}

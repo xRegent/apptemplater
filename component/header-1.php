@@ -1,0 +1,1 @@
+<div class="header-1 @$class">@$content( 'Header 1 - Example; text.' )</div>

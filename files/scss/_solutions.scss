@@ -1,0 +1,182 @@
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
+%clickable {
+	cursor: pointer;
+}
+
+%animation {
+	transition: $animation-time all $animation-type;
+}
+
+%border-link {
+	@extend .decoration-none;
+	border-bottom: 1px solid;
+	transition: $animation-time border-bottom-color;
+
+	&:hover {
+		border-bottom-color: transparent;
+	}
+}
+
+%bold {
+	@extend .weight-700;
+}
+
+%no-decoration {
+	@extend .decoration-none;
+}
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
+@each $value in $font-sizes {
+	.f-#{""+$value} {
+		@include font( $value );
+	}
+}
+@each $icon in $icons {
+	.icon-#{""+nth($icon, 1)} {
+		@include inline-image( nth($icon, 2), nth($icon, 3), nth($icon, 4) );
+	}
+}
+@each $name, $color in $colors {
+	.bg-#{""+$name} {
+		@include bg-color( $name, true );
+	}
+
+	.text-#{""+$name} {
+		@include color( $name, true );
+	}
+}
+@each $weight in $font-weight {
+	.weight-#{""+$weight} {
+		@include weight( $weight, true );
+	}
+}
+@each $height in $line-height {
+	.line-height-#{""+$height} {
+		@include line-height( $height, true );
+	}
+}
+@each $decoration in $text-decoration {
+	.decoration-#{""+$decoration} {
+		@include decoration( $decoration );
+	}
+}
+@each $value in $bg-size {
+	.bg-size-#{""+$value} {
+		@include bg-size( $value );
+	}
+}
+////////////////////////////////////////////////////////////////////////////////////////////////////
+.f-default {
+	font-size: rem( $font-size-base-value );
+}
+.w-auto {
+	width: auto;
+}
+.h-auto {
+	height: auto;
+}
+
+.hover {
+	&:hover {
+		opacity: 0.9;
+	}
+}
+.line-through {
+	text-decoration: line-through;
+}
+
+.absolute-center {
+	left: 50%;
+	top: 50%;
+	transform: translate3d( -50%, -50%, 0 );
+}
+.reset-button {
+	background: transparent;
+	border: 0;
+}
+.bg-center-no-repeat {
+	background-position: center center;
+	background-repeat: no-repeat;
+	//background-size: contain;
+}
+////////////////////////////////////////////////////////////////////////////////////////////////////
+.coords-0 {
+	left: 0 !important;
+	right: 0 !important;
+	top: 0 !important;
+	bottom: 0 !important;
+}
+.left-0 {
+	left: 0 !important;
+}
+.right-0 {
+	right: 0 !important;
+}
+.top-0 {
+	top: 0 !important;
+}
+.bottom-0 {
+	bottom: 0 !important;
+}
+.sides-0 {
+	left: 0 !important;
+	right: 0 !important;
+}
+.ends-0 {
+	top: 0 !important;
+	bottom: 0 !important;
+}
+.coords-50 {
+	left: 50% !important;
+	right: 50% !important;
+	top: 50% !important;
+	bottom: 50% !important;
+}
+
+.overflow-hidden {
+	overflow: hidden;
+}
+////////////////////////////////////////////////////////////////////////////////////////////////////
+.reset-list {
+	&, > * {
+		list-style: none;
+		padding: 0;
+		margin: 0;
+	}
+}
+.inline-list {
+	@extend .reset-list;
+
+	> * {
+		@extend .d-inline-block;
+		vertical-align: top;
+	}
+}
+.block-list {
+	@extend .reset-list;
+
+	> * {
+		@extend .d-block;
+	}
+}
+.row-list {
+	@extend .row;
+
+	&, > * {
+		list-style: none;
+		margin-top: 0;
+		margin-bottom: 0;
+	}
+}
+.row-container-list {
+	@extend .row-container;
+
+	&, > * {
+		list-style: none;
+		margin-top: 0;
+		margin-bottom: 0;
+	}
+}

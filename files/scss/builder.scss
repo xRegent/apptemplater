@@ -1,0 +1,78 @@
+/*!
+ * @xregent
+ */
+
+@charset "UTF-8";
+//////////////////////////////////////////////////////
+
+/*@font-face {
+	font-family: 'Name';
+	font-weight: 300;
+	src: local('name'), local('name'),
+		url(../name.otf);
+}*/
+//////////////////////////////////////////////////////
+
+@import "functions";
+@import "mixins";
+@import "variables";
+@import "https://fonts.googleapis.com/css?family=Open+Sans:300,400,600,700,800";
+
+// START Bootstrap
+	@import "../bootstrap-4.1.1/scss/functions";
+	@import "../bootstrap-4.1.1/scss/variables";
+
+	$colors: $_colors;
+	$theme-colors: $_theme-colors;
+
+	@import "../bootstrap-4.1.1/scss/mixins";
+	//@import "../bootstrap-4.1.1/scss/root";
+	@import "../bootstrap-4.1.1/scss/reboot";
+	@import "../bootstrap-4.1.1/scss/type";
+	@import "../bootstrap-4.1.1/scss/images";
+	//@import "../bootstrap-4.1.1/scss/code";
+	@import "../bootstrap-4.1.1/scss/grid";
+	//@import "../bootstrap-4.1.1/scss/tables";
+	//@import "../bootstrap-4.1.1/scss/forms";
+	@import "../bootstrap-4.1.1/scss/buttons";
+	//@import "../bootstrap-4.1.1/scss/transitions";
+	//@import "../bootstrap-4.1.1/scss/dropdown";
+	//@import "../bootstrap-4.1.1/scss/button-group";
+	//@import "../bootstrap-4.1.1/scss/input-group";
+	//@import "../bootstrap-4.1.1/scss/custom-forms";
+	//@import "../bootstrap-4.1.1/scss/nav";
+	//@import "../bootstrap-4.1.1/scss/navbar";
+	//@import "../bootstrap-4.1.1/scss/card";
+	//@import "../bootstrap-4.1.1/scss/breadcrumb";
+	//@import "../bootstrap-4.1.1/scss/pagination";
+	//@import "../bootstrap-4.1.1/scss/badge";
+	//@import "../bootstrap-4.1.1/scss/jumbotron";
+	//@import "../bootstrap-4.1.1/scss/alert";
+	//@import "../bootstrap-4.1.1/scss/progress";
+	@import "../bootstrap-4.1.1/scss/media";
+	//@import "../bootstrap-4.1.1/scss/list-group";
+	//@import "../bootstrap-4.1.1/scss/close";
+	//@import "../bootstrap-4.1.1/scss/modal";
+	//@import "../bootstrap-4.1.1/scss/tooltip";
+	//@import "../bootstrap-4.1.1/scss/popover";
+	//@import "../bootstrap-4.1.1/scss/carousel";
+		@import "../bootstrap-4.1.1/scss/utilities/align";
+		@import "../bootstrap-4.1.1/scss/utilities/background";
+		//@import "../bootstrap-4.1.1/scss/utilities/borders";
+		//@import "../bootstrap-4.1.1/scss/utilities/clearfix";
+		@import "../bootstrap-4.1.1/scss/utilities/display";
+		//@import "../bootstrap-4.1.1/scss/utilities/embed";
+		@import "../bootstrap-4.1.1/scss/utilities/flex";
+		@import "../bootstrap-4.1.1/scss/utilities/float";
+		@import "../bootstrap-4.1.1/scss/utilities/position";
+		//@import "../bootstrap-4.1.1/scss/utilities/screenreaders";
+		//@import "../bootstrap-4.1.1/scss/utilities/sizing";
+		@import "../bootstrap-4.1.1/scss/utilities/spacing";
+		@import "../bootstrap-4.1.1/scss/utilities/text";
+		//@import "../bootstrap-4.1.1/scss/utilities/visibility";
+	//@import "../bootstrap-4.1.1/scss/print";
+// END Bootstrap
+
+@import "solutions";
+@import "components";
+@import "skeleton";

@@ -1,0 +1,64 @@
+html {
+	//@extend .position-relative;
+	//min-height: 100%;
+	font-size: $font-size-base-px;
+}
+body {
+	font-size: $font-size-body;
+	min-width: $site-min-width;
+	cursor: default;
+	color: $color-default;
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
+.container-full {
+	//padding-left: $grid-padding;
+	//padding-right: $grid-padding;
+
+	> * {
+		@extend .row-container;
+	}
+}
+.container {
+	max-width: map-get( $container-max-widths, 'xl' );
+}
+.row-container {
+	@extend .row, .px-0;
+	width: calc( 100% + #{$grid-gutter-width} );
+}
+.row-container-max {
+	@extend .container, .row-container;
+	//max-width: map-get( $container-max-widths, 'xl' ) + $grid-gutter-width;
+	margin: 0 auto;
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
+img {
+	max-width: 100%;
+}
+select {
+	//-webkit-appearance: none;
+	//-webkit-border-radius: 2px;
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
+.site-header {
+	background-color: #AAA;
+	padding: 12px;
+	text-align: center;
+}
+
+.site-content {
+	padding: 12px;
+	text-align: center;
+	font-size: 24px;
+}
+
+.site-footer {
+	background-color: #EEE;
+	padding: 12px;
+	text-align: center;
+}

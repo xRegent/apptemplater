@@ -1,0 +1,12 @@
+AddDefaultCharset UTF-8
+RewriteEngine on
+
+ErrorDocument 404                           /rtemplater/router.php?options=data.js&section=rtemplater&page=home
+ErrorDocument 403                           /rtemplater/router.php?options=data.js&section=rtemplater&page=home
+
+RewriteRule ^dev/([a-z0-9-_]+)$             /rtemplater/router.php?options=data.js&section=rtemplater&page=$1
+RewriteRule ^component/$                    /rtemplater/router.php?options=data.js&section=rtemplater&page=components
+RewriteRule ^component/([a-z0-9-_]+)$       /rtemplater/router.php?options=data.js&section=rtemplater&page=component&component=$1
+RewriteRule ^tinymce/$                      /rtemplater/router.php?options=data.js&section=rtemplater&page=tinymce
+RewriteRule ^page/([a-z0-9-_]+)$            /rtemplater/router.php?options=data.js&page=$1
+RewriteRule ^([a-z0-9-_]+)/([a-z0-9-_]+)$   /rtemplater/router.php?options=data.js&section=$1&page=$2
