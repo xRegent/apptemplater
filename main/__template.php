@@ -1,5 +1,5 @@
 <div class="site-header" title="@rand()">
-	<a href="/">Header</a>
+	<a href="/">HOME</a> | HEADER | MAIN template
 </div>
 
 <div class="site-content">

@@ -86,7 +86,7 @@ gulp.task( 'js', [ 'js-dev' ], function(){
 		.pipe(gulp.dest('./files/build'));
 });
 ////////////////////////////////////////////////////////////////////////////////////////////////////
-gulp.task( 'rtemplater', [ 'css-dev' ], function(){
+gulp.task( 'apptemplater', [ 'css-dev' ], function(){
 	var watcher = gulp.watch( './files/scss/*.scss', [ 'css-dev' ] );
 	watcher.on( 'change', function( event ){
 		console.log( event.type + ': ' + event.path );
