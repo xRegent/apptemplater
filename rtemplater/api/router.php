@@ -1,11 +1,15 @@
 <?php
-	include( 'api.php' );
+	include( 'class.php' );
 
-	$options = [];
-	if( isset( $_GET[ 'options' ] ) )
-		$options = json_decode( file_get_contents( $_SERVER[ 'DOCUMENT_ROOT' ] . '/' . $_GET[ 'options' ] ), true );
+	$options = json_decode(
+		file_get_contents(
+			$_SERVER[ 'DOCUMENT_ROOT' ] . '/' .
+			( isset( $_GET[ 'options' ] ) ? $_GET[ 'options' ] : 'package.json' )
+		),
+		true
+	);
 
-	$tpl = new rTemplater( $options );
+	$RT = ${rTemplater::$ALIAS} = new rTemplater( $options ? $options : [] );
 
-	echo $tpl->render( 'template.php' );
+	echo $RT->renderApp();
 ?>

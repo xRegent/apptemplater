@@ -1,0 +1,9 @@
+{
+  "name": "rtemplater",
+  "version": "0.0.9",
+  "description": "Simple PHP templater",
+  "main": "",
+  "scripts": {},
+  "author": "Alex Regent",
+  "license": "MIT"
+}

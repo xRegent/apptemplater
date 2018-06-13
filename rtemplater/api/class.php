@@ -11,71 +11,154 @@
 
 */
 
-
 Class rTemplater {
 
-	private $version = '0.0.2';
+	public static $ALIAS = 'RT';
+	public static $version = '0.0.5';
 
 	function __construct( $options = [] ){
+		$this->options = $options;
+		$rt_options = $options;
+
+		if( isset( $options['rtemplater'] ) )
+			$rt_options = $options['rtemplater'];
+
 		foreach( $this->defaultOptions as $optionName => $optionValue ){
 			if( isset( $_GET[ $optionName ] ) )
 				$this->{$optionName} = $_GET[ $optionName ];
-			else if( isset( $options[ $optionName ] ) )
-				$this->{$optionName} = $options[ $optionName ];
+			else if( isset( $rt_options[ $optionName ] ) )
+				$this->{$optionName} = $rt_options[ $optionName ];
 			else
 				$this->{$optionName} = $optionValue;
 		}
 
-		//if( !$this->section )
-		//	$this->section = 'rtemplater';
-		//var_dump($this);
+		if( $this->pathToRoot === null )
+			$this->pathToRoot = $_SERVER[ 'DOCUMENT_ROOT' ] . '/';
 
-		$this->customOptions = $options;
+		$formatedLevels = [];
+		foreach( $this->levels as $level ){
+			if( $level )
+				$formatedLevels[] = str_replace( '/', '', $level );
+		}
+		$this->levels = $formatedLevels;
+		$this->levelCount = count( $formatedLevels );
+		if( $this->levelCount ){
+			$this->firstLevel = $formatedLevels[ 0 ];
+			$this->lastLevel = $formatedLevels[ $this->levelCount - 1 ];
+		}
+		else
+			$this->firstLevel = $this->lastLevel = null;
+
+		$this->level = $this->levelInfo( 1 );
+		rTemplater::$ALIAS = $this->alias;
+
+
+
+
+
+		echo '<pre>$GET  - '; print_r( $_GET ); echo '</pre>';
+		echo '<pre>LEVEL - '; print_r( $this->levels ); echo '</pre>';
+		//var_dump($this);
 	}
 
 	private $chunks = [];
-	private $defaultOptions = [
-		'projectName'=> '',
-		'section'=> '',
-		'sections'=> [],
-		'sectionTemplate'=> false,
-		'page'=> '',
-		'data'=> [],
-		'dev'=> true,
-		'pathToPages'=> 'pages',
-		'pathToComponents'=> 'component',
-		'pathToWebRoot'=> '/',
-		'pathToWebPage'=> 'page',
-		'pathToWebComponent'=> 'component',
-		'pathToWebComponents'=> 'component/',
-		'alias'=> 'tpl',
-		'errorLog'=> ''
-	];
+	private $errors = [];
 	private $transformCustomExpr = '/\{\{(.+)\}\}/';
 	private $transformVarExpr = '/@\$([a-zA-Z0-9_]+)(\([^\)]*\))?/';
 	private $transformFnExpr = '/@(([a-zA-Z0-9_]+)\((\'[^\']*\'|"[^"]*"|[^\)])*\))/';
+	private $defaultOptions = [
+		'projectTitle'        => '',
+		'levels'              => [],
+		'browseLevel'         => '',
+		'currentLevelDeep'    => 0,
 
+		'alias'               => 'RT',
+		'sections'            => [],
+		'pathToRoot'          => null,
+		'pathToWebRoot'       => '/',
+		'pathToSection'       => './',
+		'pathToWebSection'    => '',
+		'pathToComponent'     => './component/',
+		'pathToWebComponent'  => 'component/',
+		'log'                 => true,
+		'logFile'             => '',
+		'templateFileName'    => '__template.php',
+		'fileExtension'       => '.php'
+	];
+
+
+	public function path( $file ){
+		return $this->pathToRoot . $file;
+	}
 	public function file( $file ){
 		$text = '';
 		error_reporting( E_ALL ^ E_NOTICE ^ E_WARNING );
-		$text = file_get_contents( $this->pathToFile( $file ) );
+		$text = file_get_contents( $this->path( $file ) );
 		error_reporting( E_ALL );
 		return $text;
 	}
+	public function isFile( $file ){
+		return file_exists( $this->path( $file ) );
+	}
 
-	public function renderContent(){
-		$content = '';
+	public function renderApp(){
+		$appContent = $this->render( $this->templateFileName );
 
-		if( $this->section && $this->sectionTemplate )
-			$content .= $this->render( $this->section . '/template.php' );
+		//if( $this->log )
+		//	$appContent .= $this->printErrors();
 
-		else if( $this->page )
-			$content .= $this->renderPage( $this->page );
+		if( $this->logFile )
+			$appContent .= $this->file( $this->logFile );
 
-		if( $this->errorLog )
-			$content .= $this->file( $this->errorLog );
+		return $appContent;
+	}
 
-		return $content;
+	public function renderLevel( $deep = null ){
+		if( $deep === null ){
+			$this->currentLevelDeep++;
+			$deep = $this->currentLevelDeep;
+		}
+		$level = $this->levelInfo( $deep );
+		$this->level = $level;
+
+		//var_dump( $level );
+
+		if( $level->name == $this->lastLevel ){
+			if( $level->isPage ){
+				if( $this->browseLevel )
+					return 'BROWSE OF LEVEL ' . $level->path;
+				else
+					return $this->render( $level->pagePath );
+			}
+			else {
+				// 404 Error Page
+			}
+		}
+
+		else if( $level->isTemplate )
+			return $this->render( $level->templatePath );
+		else {
+			// 404 Error
+		}
+
+
+		//return $this->renderPage();
+	}
+
+	public function levelInfo( $deep ){
+		$level               = new stdClass();
+		$level->deep         = $deep;
+		$level->name         = $this->levels[ $level->deep - 1 ];
+		$level->path         = join( array_slice( $this->levels, 0, $level->deep ), '/' );
+		$level->templatePath = $level->path . '/' . $this->templateFileName;
+		$level->isTemplate   = $this->isFile( $level->templatePath );
+		$level->pagePath     = $level->path . $this->fileExtension;
+		$level->isPage       = $this->isFile( $level->pagePath );
+		return $level;
+	}
+
+	public function renderPage( $path = null ){
+		return $this->render( ( $path === null ? $this->level->path : $path ) . $this->fileExtension );
 	}
 
 	public function render( $file, $args = [] ){
@@ -156,24 +239,6 @@ Class rTemplater {
 		return $this->render( $this->pathToComponents . '/' . $name . '.php', $args );
 	}
 
-	public function tplComponent( $name, $args = [] ){
-		return $this->render(
-			$this->section . '/' . $this->pathToComponents . '/' . $name . '.php',
-			$args
-		);
-	}
-
-	public function renderPage( $name = '', $args = [] ){
-		return $this->render(
-			( $this->section ? $this->section . '/' : '' ) . $this->pathToPages . '/' . ( $name ? $name : $this->page ) . '.php',
-			$args
-		);
-	}
-
-	public function pathToFile( $file ){
-		return $_SERVER[ 'DOCUMENT_ROOT' ] . '/' . $file;
-	}
-
 	public function chunk( $name, $data = null ){
 		if( $data != null )
 			$this->chunks[ $name ] = $data;
@@ -184,7 +249,7 @@ Class rTemplater {
 	}
 
 	public function getFileResources( $path ){
-		$files = glob( $this->pathToFile( $path . "/[^_]*.php" ) );
+		$files = glob( $this->path( $path . "/[^_]*.php" ) );
 		$names = [];
 		foreach( $files as $file ){
 			preg_match( "/(.+\/)?(.+).php/", $file, $matches );
@@ -232,6 +297,9 @@ Class rTemplater {
 	}
 
 	public function pageTitle( $page = null, $section = null ){
+
+		return 'PAGE TITLE';
+
 		if( $page === null )
 			$page = $this->page;
 		if( $section === null )
@@ -251,7 +319,24 @@ Class rTemplater {
 
 }
 
-function app( $name ){
-	global $tpl;
-	return isset( $tpl->customOptions[ $name ] ) ? $tpl->customOptions[ $name ] : '';
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+function app( $name = null ){
+	global ${rTemplater::$ALIAS};
+	$RT = ${rTemplater::$ALIAS};
+
+	if( $name === null )
+		return $RT->options;
+	else {
+		$path = explode( ".", $name );
+		$value = $RT->options;
+		foreach( $path as $level_name ){
+			if( isset( $value[ $level_name ] ) )
+				$value = $value[ $level_name ];
+			else
+				return null;
+		}
+
+		return $value;
+	}
 }
