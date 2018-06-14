@@ -3,7 +3,7 @@
 
 	"rtemplater": {
 		"projectTitle": "apptemplater",
-		"sections": [ "main", "test" ]
+		"rootLevels": [ "main", "test", "test-level-1" ]
 	},
 
 

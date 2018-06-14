@@ -24,11 +24,6 @@ var
 		}
 	},
 
-	errorToHtml = function( error ){
-		var style = 'position: fixed; z-index: 999999;top: 0;left: 0;right: 0;font-weight: bold;font-size: 20px;line-height: 38px;padding: 30px 5px 30px 50px;margin: 0;background: #ffdada;border-bottom: 1px solid #f19898;box-shadow: 0 5px 40px #652424;';
-		return '<pre style="' + style + '">' + ( error || 'Error!' ) + '</pre>';
-	},
-
 	errorLog = {
 		html: true,
 		css: false
@@ -41,7 +36,7 @@ gulp.task( 'css-dev', function(){
 		.pipe(sourcemaps.init())
 		.pipe(sass().on('error', function( err ){
 			if( errorLog.html )
-				fs.writeFile( './files/build-dev/error-log.html', errorToHtml( err.message ), (e)=>{} );
+				fs.writeFile( './files/build-dev/error-log.html', err.message, (e)=>{} );
 
 			if( errorLog.css )
 				fs.writeFile( './files/build-dev/main.css', "/*\n" + err.message + "\n*/", (e)=>{} );

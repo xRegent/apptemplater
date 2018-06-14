@@ -1,1 +1,1 @@
-@renderPage( $this->page )
+@renderLevel()
