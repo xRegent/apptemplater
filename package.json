@@ -1,9 +1,92 @@
 {
-	"debug": true,
+	"app": {
 
-	"rtemplater": {
-		"projectTitle": "apptemplater",
-		"rootLevels": [ "main", "test", "test-level-1" ]
+		"debug": true,
+
+		"rtemplater": {
+			"name": "apptemplater",
+			"rootLevels": [ "main", "test", "test-level-1" ],
+			"logFile" : "/files/build/dev.log.html"
+		},
+
+		"styles": {
+			"dev": [
+				"https://cdnjs.cloudflare.com/ajax/libs/Swiper/4.3.0/css/swiper.min.css",
+				"/files/build/main.dev.css"
+			],
+			"production": [
+				"https://cdnjs.cloudflare.com/ajax/libs/Swiper/4.3.0/css/swiper.min.css",
+				"/files/build/main.min.css"
+			]
+		},
+
+		"scripts": {
+			"dev": [
+				"https://code.jquery.com/jquery-3.3.1.js",
+				"https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.js",
+				"https://stackpath.bootstrapcdn.com/bootstrap/4.1.1/js/bootstrap.js",
+				"https://cdnjs.cloudflare.com/ajax/libs/Swiper/4.3.0/js/swiper.js",
+				"/files/js/main.js"
+			],
+			"production": [
+				"https://code.jquery.com/jquery-3.3.1.min.js",
+				"https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js",
+				"https://stackpath.bootstrapcdn.com/bootstrap/4.1.1/js/bootstrap.min.js",
+				"https://cdnjs.cloudflare.com/ajax/libs/Swiper/4.3.0/js/swiper.min.js",
+				"/files/build/main.min.js"
+			]
+		},
+
+		"build": {
+			"folder": "/files/build",
+
+			"watch": {
+				"/files/scss/*.scss": [ "dev/production" ],
+				"/files/js/*.js": [ "production" ]
+			},
+
+			"tasks": {
+
+				"default": [ "dev/production" ],
+
+				"dev": [
+					{
+						"clearFolder": true,
+						
+						"src": "/files/scss/builder.scss",
+						"sass": true,
+						"sourcemaps": true,
+						"log": "/files/build/dev.log.html",
+						"autoprefixer": {
+							"browsers": [ "last 2 versions" ],
+							"cascade": false
+						},
+						"rename": "main.dev.css"
+					}
+				],
+
+				"production": [
+					{
+						"clearFolder": true,
+
+						"src": "/files/scss/builder.scss",
+						"sass": true,
+						"log": "/files/build/dev.log.html",
+						"autoprefixer": {
+							"browsers": [ "last 2 versions" ],
+							"cascade": false
+						},
+						"minifyCSS": true,
+						"rename": "main.min.css"
+					},
+					{
+						"src": "/files/js/main.js",
+						"uglify": true,
+						"rename": "main.min.js"
+					}
+				]
+			}
+		}
 	},
 
 

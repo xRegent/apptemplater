@@ -65,14 +65,13 @@ Class rTemplater {
 	private $transformVarExpr = '/@\$([a-zA-Z0-9_]+)(\([^\)]*\))?/';
 	private $transformFnExpr = '/@(([a-zA-Z0-9_]+)?\((\'[^\']*\'|"[^"]*"|[^\)])*\))/';
 	private $defaultOptions = [
-		'projectTitle'        => '',
+		'name'                => '',
 		'levels'              => [],
 		'rootLevels'          => [],
 		'browseLevel'         => '',
 		'currentLevelDeep'    => 0,
 
 		'alias'               => 'RT',
-		'sections'            => [],
 		'pathToRoot'          => null,
 		'pathToWebRoot'       => '/',
 		'pathToLevel'         => './',
@@ -111,12 +110,8 @@ Class rTemplater {
 	public function renderApp(){
 		$appContent = $this->render( $this->templateFileName );
 
-		if( $this->logFile ){
-			$errors = $this->file( $this->logFile );
-
-			if( $errors )
-				$this->errors[] = $this->file( $this->logFile );
-		}
+		if( $this->logFile && $this->isFile( $this->logFile ) )
+			$this->errors[] = $this->file( $this->logFile );
 
 		if( $this->log && count( $this->errors ) )
 			$appContent .= '<pre style="position: fixed; z-index: 999999;top: 0;left: 0;right: 0;font-weight: bold;font-size: 20px;line-height: 38px;padding: 30px 5px 30px 50px;margin: 0;background: #ffdada;border-bottom: 1px solid #f19898;box-shadow: 0 5px 40px #652424;">' .
@@ -316,9 +311,57 @@ Class rTemplater {
 
 		switch( $type ){
 
+			case 'scripts':
+				$dev = $this->options[ 'debug' ];
+				$scripts = $this->options[ 'scripts' ][ $dev ? 'dev' : 'production' ];
+				$content = PHP_EOL;
+				foreach( $scripts as $link ){
+					$content .= "\t" .
+						'<script src="' .
+						$link .
+						( $dev && !preg_match( '/^\w+:\/\//', $link ) ? '?v=' . $this->generate( 'timestamp' ) : '' ) .
+						'"></script>' .
+						PHP_EOL;
+				}
+				break;
+
+			case 'styles':
+				$dev = $this->options[ 'debug' ];
+				$styles = $this->options[ 'styles' ][ $dev ? 'dev' : 'production' ];
+				$content = PHP_EOL;
+				foreach( $styles as $link ){
+					$content .= "\t" .
+						'<link rel="stylesheet" href="' .
+						$link .
+						( $dev && !preg_match( '/^\w+:\/\//', $link ) ? '?v=' . $this->generate( 'timestamp' ) : '' ) .
+						'" />' .
+						PHP_EOL;
+				}
+				break;
+
+			case 'timestamp':
+				$content = number_format( microtime(true) * 1000, 0, '.', '' );
+				break;
+
+			case 'folder-slug':
+				$content = implode( $this->levels, '-' );
+				break;
+
 			case 'browse-folder':
 				$path = isset( $args[ 0 ] ) ? $args[ 0 ] : '';
-				$content = $this->renderPage( 'rtemplater/browse', [ '_PATH'=>$path ] );
+				$content = $this->renderPage( 'rtemplater/browse', [ 'path'=>$path ] );
+				break;
+
+			case 'page-title':
+				$content = strtoupper( $this->name );
+				if( $this->lastLevel != 'browse' ){
+
+					if( $this->firstLevel )
+						$content = ( $content ? $content . ' ' : '' ) . strtoupper( $this->firstLevel );
+
+					if( $this->lastLevel && $this->lastLevel != $this->firstLevel )
+						$content = ( $content ? $content . ' ' : '' ) . $this->lastLevel;
+				}
 				break;
 
 			case 'random-rgb-color':

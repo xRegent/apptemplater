@@ -9,7 +9,7 @@
 		true
 	);
 
-	$RT = ${rTemplater::$ALIAS} = new rTemplater( $options ? $options : [] );
+	$RT = ${rTemplater::$ALIAS} = new rTemplater( $options ? isset( $options['app'] ) ? $options['app'] : $options : [] );
 
 	echo $RT->renderApp();
 ?>

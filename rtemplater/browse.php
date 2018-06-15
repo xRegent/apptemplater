@@ -43,12 +43,14 @@
 		if( $content && $item['type'] == 'folder' )
 			$itemContent .= '</div><hr class="-level-separator"><div class="-level-block">'.PHP_EOL;
 
-		if( !$content && $item['type'] == 'page' )
-			$itemContent .= '<div><a href="." class="-level-link">PAGES</a></div>'.PHP_EOL;
+		//if( !$content && $item['type'] == 'page' )
+		//	$itemContent .= '<div><a href="." class="-level-link">PAGES</a></div>'.PHP_EOL;
 
 
 		if( $item['type'] == 'folder' )
-			$itemContent .= '<div><a href="' . $item['url'] . '" class="-level-link">' . $item['url'] . '</a></div>'.PHP_EOL;
+			$itemContent .= '<div><a href="' . $item['url'] . '" class="-level-link">' .
+				preg_replace( '/\//', '<span class="-text-red">/</span>', preg_replace( '/^\/|\/$/', '', $item['url'] ) ) .
+			'</a></div>'.PHP_EOL;
 
 		else if( $item['type'] == 'page' )
 				$itemContent .= '<a href="' . $item['url'] . '" class="btn btn-primary -btn-page" style="'
@@ -88,6 +90,8 @@
 			border-left: none;
 			font-size: 20px;
 			text-decoration: none;
+			color: #000;
+			font-weight: bold;
 		}
 			.-level-link:hover {
 				text-decoration: none;
@@ -97,6 +101,10 @@
 			display: block;
 			margin: 30px 0;
 		}
+
+	.-text-red {
+		color: #b30202;
+	}
 
 	.-btn-main {
 		font-size:26px;
