@@ -6,7 +6,8 @@
 		"rtemplater": {
 			"name": "apptemplater",
 			"rootLevels": [ "main", "test", "test-level-1" ],
-			"logFile" : "/files/build/dev.log.html"
+			"printLog" : false,
+			"printFileLog" : "/files/build/dev.log.html"
 		},
 
 		"styles": {
@@ -51,8 +52,6 @@
 
 				"dev": [
 					{
-						"clearFolder": true,
-						
 						"src": "/files/scss/builder.scss",
 						"sass": true,
 						"sourcemaps": true,

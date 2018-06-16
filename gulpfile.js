@@ -54,33 +54,38 @@ var
 		if( element.sass ){
 			let _sass = sass();
 
-			if( element.log || element.cssLog )
+			if( element.log || element.cssLog ){
+				let
+					log_path = fixPath( element.log || '' ),
+					log_dir = log_path.replace( /\/[^\/]*$/, '' ),
+					cssLog_path = fixPath( element.cssLog || '' ),
+					cssLog_dir = cssLog_path.replace( /\/[^\/]*$/, '' );
+
+				if( log_path && fs.existsSync( log_path ) )
+					fs.unlinkSync( log_path );
+
+				if( cssLog_path && fs.existsSync( cssLog_path ) )
+					fs.unlinkSync( cssLog_path );
+
 				_sass = _sass.on( 'error', function( err ){
 					
 					if( element.log ){
-						let
-							path = fixPath( element.log ),
-							dir = path.replace( /\/[^\/]*$/, '' );
+						if( !fs.existsSync( log_dir ) )
+							fs.mkdirSync( log_dir );
 
-						if( !fs.existsSync( dir ) )
-							fs.mkdirSync( dir );
-
-						fs.writeFile( path, err.message, (e)=>{} );
+						fs.writeFile( log_path, err.message, (e)=>{} );
 					}
 
 					if( element.cssLog ){
-						let
-							path = fixPath( element.cssLog ),
-							dir = path.replace( /\/[^\/]*$/, '' );
+						if( !fs.existsSync( cssLog_dir ) )
+							fs.mkdirSync( cssLog_dir );
 
-						if( !fs.existsSync( dir ) )
-							fs.mkdirSync( dir );
-
-						fs.writeFile( path, "/*\n" + err.message + "\n*/", (e)=>{} );
+						fs.writeFile( cssLog_path, "/*\n" + err.message + "\n*/", (e)=>{} );
 					}
 
 					sass.logError.call( this, err );
 				});
+			}
 
 			file = file.pipe( _sass );
 		}
@@ -105,9 +110,10 @@ var
 
 		return file;
 	};
-
+////////////////////////////////////////////////////////////////////////////////////////////////////
 Object.keys( options.tasks ).forEach(function( taskName ){
 	let task = options.tasks[ taskName ];
+	
 	gulp.task( taskName, function(){
 		console.log( '|   Task: ' + taskName + '. Dubug: ' + !!app.debug );
 
@@ -124,7 +130,7 @@ Object.keys( options.tasks ).forEach(function( taskName ){
 		});
 	});
 });
-
+////////////////////////////////////////////////////////////////////////////////////////////////////
 if( options.watch ){
 	let watchFn = function(){
 		Object.keys( options.watch ).forEach(function( fileName ){
@@ -151,72 +157,3 @@ if( options.watch ){
 	gulp.task( 'watch', watchFn );
 	gulp.task( package.name, watchFn );
 }
-	
-
-
-return;
-////////////////////////////////////////////////////////////////////////////////////////////////////
-gulp.task( 'css-dev', function(){
-	fs.writeFile( './files/build-dev/error-log.html', '', (e)=>{} );
-	return gulp.src( './files/scss/builder.scss' )
-		.pipe(sourcemaps.init())
-		.pipe(sass().on('error', function( err ){
-			if( errorLog.html )
-				fs.writeFile( './files/build-dev/error-log.html', err.message, (e)=>{} );
-
-			if( errorLog.css )
-				fs.writeFile( './files/build-dev/main.css', "/*\n" + err.message + "\n*/", (e)=>{} );
-
-			sass.logError.call( this, err );
-		}))
-		.pipe(autoprefixer({
-			browsers: [ 'last 2 versions' ],
-			cascade: false
-		}))
-		.pipe(rename({
-			basename: "main"
-		}))
-		.pipe(sourcemaps.write( '.', {
-			mapFile: function( mapFilePath ){
-				return mapFilePath.replace( '.css', '' );
-			}
-		}))
-		.pipe(gulp.dest('./files/build-dev'));
-});
-////////////////////////////////////////////////////////////////////////////////////////////////////
-gulp.task( 'css', [ 'css-dev' ], function(){
-	return gulp.src( './files/build-dev/main.css' )
-		.pipe(minifyCSS())
-		.pipe(rename({
-			basename: "main.min"
-		}))
-		.pipe(gulp.dest('./files/build'));
-});
-////////////////////////////////////////////////////////////////////////////////////////////////////
-gulp.task( 'js-dev', function(){
-	return gulp.src( './files/js/main.js' )
-		.pipe(gulp.dest('./files/build-dev'));
-});
-////////////////////////////////////////////////////////////////////////////////////////////////////
-gulp.task( 'js', [ 'js-dev' ], function(){
-	return gulp.src( './files/build-dev/main.js' )
-		.pipe(uglify())
-		.pipe(rename({
-			basename: "main.min"
-		}))
-		.pipe(gulp.dest('./files/build'));
-});
-////////////////////////////////////////////////////////////////////////////////////////////////////
-gulp.task( 'apptemplater', [ 'css-dev' ], function(){
-	var watcher = gulp.watch( './files/scss/*.scss', [ 'css-dev' ] );
-	watcher.on( 'change', function( event ){
-		console.log( event.type + ': ' + event.path );
-	});
-});
-////////////////////////////////////////////////////////////////////////////////////////////////////
-gulp.task( 'default', [ 'css', 'js' ] );
-////////////////////////////////////////////////////////////////////////////////////////////////////
-gulp.task( 'production', [ 'default' ], function(){
-	deleteFolderRecursive( './files/build-dev' );
-});
-////////////////////////////////////////////////////////////////////////////////////////////////////

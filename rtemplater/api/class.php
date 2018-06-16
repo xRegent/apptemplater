@@ -49,8 +49,8 @@ Class rTemplater {
 		else
 			$this->firstLevel = $this->lastLevel = null;
 
-		$this->level = $this->levelInfo( 1 );
 		rTemplater::$ALIAS = $this->alias;
+		//$this->level = $this->levelInfo( 0 );
 
 
 
@@ -59,29 +59,37 @@ Class rTemplater {
 		//var_dump($this);
 	}
 
-	private $chunks = [];
-	private $errors = [];
-	private $transformCustomExpr = '/\{\{(.+)\}\}/';
-	private $transformVarExpr = '/@\$([a-zA-Z0-9_]+)(\([^\)]*\))?/';
-	private $transformFnExpr = '/@(([a-zA-Z0-9_]+)?\((\'[^\']*\'|"[^"]*"|[^\)])*\))/';
+	private $levelsCache    = [];
 	private $defaultOptions = [
+		'transformCustomExpr' => '/\{\{(.+)\}\}/',
+		'transformVarExpr'    => '/@\$([a-zA-Z0-9_]+)(\([^\)]*\))?/',
+		'transformFnExpr'     => '/@(([a-zA-Z0-9_]+)?\((\'[^\']*\'|"[^"]*"|[^\)])*\))/',
+
+		'alias'               => 'RT',
 		'name'                => '',
 		'levels'              => [],
 		'rootLevels'          => [],
 		'browseLevel'         => '',
-		'currentLevelDeep'    => 0,
+		'currentLevelDeep'    => -1,
 
-		'alias'               => 'RT',
 		'pathToRoot'          => null,
 		'pathToWebRoot'       => '/',
 		'pathToLevel'         => './',
 		'pathToWebLevel'      => '',
 		'pathToComponent'     => './component/',
 		'pathToWebComponent'  => 'component/',
-		'log'                 => true,
-		'logFile'             => '',
 		'templateFileName'    => '__template.php',
-		'fileExtension'       => '.php'
+		'fileExtension'       => '.php',
+
+		'chunks'              => [],
+
+		'appLog'              => [],
+		'printLog'            => false,
+
+		'errorLog'            => [],
+		'printErrorLog'       => true,
+
+		'printFileLog'        => ''
 	];
 
 
@@ -89,6 +97,8 @@ Class rTemplater {
 		return $this->pathToRoot . $file;
 	}
 	public function file( $file ){
+		$this->log( "file: $file" );
+
 		$content = null;
 
 		if( $this->isFile( $file ) ){
@@ -97,43 +107,140 @@ Class rTemplater {
 			//error_reporting( E_ALL );
 		}
 		else {
-			$this->errors[] = 'FILE Not Found: ' . $file;
+			$this->errorLog[] = 'FILE Not Found: ' . $file;
 			
 		}
 
 		return $content;
 	}
 	public function isFile( $file ){
+		$this->log( "isFile: $file" );
 		return file_exists( $this->path( $file ) );
 	}
 
 	public function renderApp(){
-		$appContent = $this->render( $this->templateFileName );
-
-		if( $this->logFile && $this->isFile( $this->logFile ) )
-			$this->errors[] = $this->file( $this->logFile );
-
-		if( $this->log && count( $this->errors ) )
-			$appContent .= '<pre style="position: fixed; z-index: 999999;top: 0;left: 0;right: 0;font-weight: bold;font-size: 20px;line-height: 38px;padding: 30px 5px 30px 50px;margin: 0;background: #ffdada;border-bottom: 1px solid #f19898;box-shadow: 0 5px 40px #652424;">' .
-				join( "\n----------\n", $this->errors )
-				. '</pre>';
+		$this->log( "renderApp" );
 
 		//var_dump($this);
 
-		return $appContent;
+		return $this->renderLevel() . $this->renderLogs();
 	}
 
-	public function renderLevel( $deep = null ){
-		if( $deep === null ){
-			$this->currentLevelDeep++;
-			$deep = $this->currentLevelDeep;
+	public function renderLevel( $levelsList = null ){
 
-			//var_dump( "---deep: $deep" );
+		if( $levelsList === null )
+			$levelsList = $this->levels;		
+
+		$levelsSlug = implode( ',', $levelsList );
+
+		if( isset( $this->levelsCache[ $levelsSlug ] ) )
+			$levels = $this->levelsCache[ $levelsSlug ];
+
+		else {
+			$levels          = new stdClass();
+			$levels->list    = $levelsList;
+			$levels->slug    = $levelsSlug;
+			$levels->count   = count( $levelsList );
+			$levels->first   = $levelsList[ 0 ];
+			$levels->last    = $levelsList[ $levels->count - 1 ];
+			$levels->eq      = [];
+			$levels->deep    = 0;
+			$levels->error   = '';
+
+			if( $levels->count < 1 )
+				$levels->error = "Number of levels is less than 1";
+
+			$this->levelsCache[ $levelsSlug ] = $levels;
 		}
-		$level = $this->levelInfo( $deep );
-		$this->level = $level;
 
+
+		if( isset( $levels->eq[ $levels->deep ] ) )
+			$level = $levels->eq[ $levels->deep ];
+
+		else {
+			$level = new stdClass();
+			$level->deep = $deep = $levels->deep;
+			$level->error = '';
+
+			if( $deep > $levels->count )
+				$level->error = "Deep $deep to much";
+
+			if( $levels->error )
+				$level->error = $levels->error;
+
+			if( $level->error )
+				return $level;
+
+			$level->levelsSlug              = $levels->slug;
+			$level->name                    = $levels->list[ $deep ];
+			$level->path                    = join( array_slice( $levels->list, 0, $deep + 1 ), '/' );
+
+			$level->pagePath                = $level->path . $this->fileExtension;
+			$level->isPageExists            = $this->isFile( $level->pagePath );
+			
+			$level->templatePath            = preg_replace( '/(\/)?[^\/]+$/', "$1" . $this->templateFileName, $level->pagePath );
+			$level->isTemplateExists        = $this->isFile( $level->templatePath );
+
+			$level->prev                    = $deep > 0 && isset( $levels->list[ $deep - 1 ] ) ? $levels->list[ $deep - 1 ] : '';
+			$level->next                    = isset( $levels->list[ $deep + 1 ] ) ? $levels->list[ $deep + 1 ] : '';
+			$level->nextPath                = $level->next ? $level->path . '/' . $level->next : '';
+
+			$level->nextTemplatePath        = $level->path . '/' . $this->templateFileName;
+			$level->isNextTemplateExists    = $this->isFile( $level->nextTemplatePath );
+
+			$level->nextPagePath            = $level->next ? $level->path . '/' . $level->next . $this->fileExtension : '';
+			$level->isNextPageExists        = $level->next ? $this->isFile( $level->nextPagePath ) : false;
+
+			$level->isLastLevel             = $deep == $levels->count - 1;
+			$level->canTemplate             = $level->isTemplateExists;
+
+			$levels->eq[ $levels->deep ] = $level;
+		}
+
+		$levels->current = $level;
+
+		//var_dump( $levels );
 		//var_dump( $level );
+
+		if( $level->canTemplate ){
+			$this->log( "renderLevel($level->deep): template: $level->templatePath" );
+
+			$level->canTemplate = false;
+			return $this->render( $level->templatePath );
+		}
+		else if( $level->isLastLevel ){
+
+			if( $this->browseLevel )
+				return $this->generate( 'browse-folder', $level->path );
+
+			else if( $level->isPageExists ){
+				$this->log( "renderLevel($level->deep): page: $level->pagePath" );
+
+				return $this->render( $level->pagePath );
+			}
+			else
+				return $this->renderError( "404 - PAGE Not Found: $level->path" );
+		}
+		else if( $level->isNextTemplateExists || $level->isNextPageExists ){
+
+			if( $level->isNextTemplateExists )
+				$this->log( "renderLevel($level->deep): detect next template: $level->nextTemplatePath" );
+
+			else if( $level->isNextPageExists )
+				$this->log( "renderLevel($level->deep): detect next page: $level->nextPagePath" );
+
+			$levels->deep++;
+			return $this->renderLevel( $levels->list );
+		}
+
+		else if( $levels->count - $levels->deep <= 2 && !$level->isNextPageExists )
+			return $this->renderError( "404 - PAGE Not Found: $level->nextPath" );
+
+		else
+			return $this->renderError( "404 - Not Found logic in path: $level->path" );
+
+
+		return '';//////////////////////////////////////////////////////////
 
 		if( $level->name == $this->lastLevel ){
 			if( $this->browseLevel )
@@ -157,6 +264,8 @@ Class rTemplater {
 	}
 
 	public function levelInfo( $deep ){
+		$this->log( "levelInfo: $deep" );
+
 		$level                          = new stdClass();
 		$level->deep                    = $deep;
 		$level->name                    = $this->levels[ $level->deep - 1 ];
@@ -169,14 +278,20 @@ Class rTemplater {
 	}
 
 	public function renderPage( $path = null, $args = [] ){
-		return $this->render( ( $path === null ? $this->level->path : $path ) . $this->fileExtension, $args );
+		$path = ( $path === null ? $this->level->path : $path );
+		$this->log( "renderPage: $path" );
+		return $this->render( $path . $this->fileExtension, $args );
 	}
 
 	public function render( $file, $args = [] ){
+		$this->log( "render: $file" );
 		return $this->renderHTML( $this->file( $file ), $args );
 	}
 
-	public function renderHTML( $text, $args = [] ){		
+	public function renderHTML( $text, $args = [] ){
+		//$this->log( "renderHTML: " . str_replace( "\n", '', substr( $text, 0, 30 ) ) );
+		$this->log( "renderHTML" );
+
 		$text = $this->transformToPHP( $text );
 		
 		if( is_string( $args ) )
@@ -199,7 +314,52 @@ Class rTemplater {
 		return $text;
 	}
 
+	public function renderError( $args = [] ){
+		$this->log( "renderError" );
+
+		if( is_string( $args ) )
+			$this->errorLog[] = $args;
+
+		return $this->renderPage( 'rtemplater/browse', $args );
+	}
+
+	public function renderLogs(){
+		$content = '';
+		$popUpErrors = $this->printErrorLog ? $this->errorLog : [];
+
+		if( $this->printFileLog && $this->isFile( $this->printFileLog ) )
+			$popUpErrors[] = $this->file( $this->printFileLog );
+
+		if( count( $popUpErrors ) )
+			$content .= '<pre style="position: fixed; z-index: 999999;top: 0;left: 0;right: 0;font-weight: bold;font-size: 20px;line-height: 38px;padding: 30px 5px 30px 50px;margin: 0;background: #ffdada;border-bottom: 1px solid #f19898;box-shadow: 0 5px 40px #652424;">' .
+				join( "\n----------\n", $popUpErrors )
+				. '</pre>';
+
+		if( $this->printLog && count( $this->appLog ) ){
+			$content .= "<pre style='
+				font-weight: bold;
+				font-size: 20px;
+				line-height: 38px;
+				padding: 0 5px 0 50px;
+				margin: 40px 0 0 0;
+				background: #daffff;
+				border-top: 1px solid #c3cff9;
+				box-shadow: 0 5px 40px #6ee8db;'>";
+
+			ob_start();
+			print_r( $this->appLog );
+			$content .= preg_replace( '/\n\s*|^Array\n\(|\)$/', "\n", ob_get_contents() );
+			ob_end_clean();
+
+			$content .= '</pre>';
+		}
+
+		return $content;
+	}
+
 	public function transformToPHP( $text ){
+		$this->log( "transformToPHP" );
+
 		$text = preg_replace_callback(
 			$this->transformCustomExpr,
 			function( $matches ){
@@ -246,10 +406,20 @@ Class rTemplater {
 	}
 
 	public function renderComponent( $name, $args = [] ){
+		$this->log( "renderComponent: $name" );
 		return $this->render( $this->pathToComponent . $name . $this->fileExtension, $args );
 	}
 
+	public function log( ...$args ){
+		if( count( $args ) == 1 )
+			$this->appLog[] = $args[ 0 ];
+		else
+			$this->appLog[] = $args;
+	}
+
 	public function chunk( $name, $data = null ){
+		$this->log( "chunk: $name" );
+
 		if( $data != null )
 			$this->chunks[ $name ] = $data;
 		else if( isset( $this->chunks[ $name ] ) )
@@ -259,6 +429,8 @@ Class rTemplater {
 	}
 
 	public function scanFolder( $path = '' ){
+		$this->log( "scanFolder: $path" );
+
 		$directory = $path == '' ? '' : $path . '/';
 		$files = glob( $this->path( $directory . '[^_]*.php' ) );
 		$folders = array_filter( glob( $this->path( $directory .'[^_]*' ) ), 'is_dir' );
@@ -307,6 +479,8 @@ Class rTemplater {
 
 
 	public function generate( $type = '', ...$args ){
+		$this->log( "generate: $type" );
+
 		$content = '';
 
 		switch( $type ){

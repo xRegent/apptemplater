@@ -80,6 +80,7 @@
 		padding: 15px;
 		margin: 10px 0;
 		border-left: 2px solid green;
+		text-align: left;
 	}
 		.-level-link {
 			display: inline-block;
