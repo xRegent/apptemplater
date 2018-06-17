@@ -6,7 +6,7 @@
 	<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 	@generate("styles")
 </head>
-<body class="page-@$lastLevel">
+<body class="page-@$this->levels->last">
 
 
 @renderLevel()

@@ -32,25 +32,13 @@ Class rTemplater {
 				$this->{$optionName} = $optionValue;
 		}
 
-		if( $this->pathToRoot === null )
-			$this->pathToRoot = $_SERVER[ 'DOCUMENT_ROOT' ] . '/';
+		if( $this->pathToRootFolder === null )
+			$this->pathToRootFolder = $_SERVER[ 'DOCUMENT_ROOT' ] . '/';
 
-		$formatedLevels = [];
-		foreach( $this->levels as $level ){
-			if( $level )
-				$formatedLevels[] = str_replace( '/', '', $level );
-		}
-		$this->levels = $formatedLevels;
-		$this->levelCount = count( $formatedLevels );
-		if( $this->levelCount ){
-			$this->firstLevel = $formatedLevels[ 0 ];
-			$this->lastLevel = $formatedLevels[ $this->levelCount - 1 ];
-		}
-		else
-			$this->firstLevel = $this->lastLevel = null;
+		$this->levels = $this->levelsInfo( $this->levelList );
+		$this->levelList = $this->levels->list;
 
 		rTemplater::$ALIAS = $this->alias;
-		//$this->level = $this->levelInfo( 0 );
 
 
 
@@ -59,42 +47,42 @@ Class rTemplater {
 		//var_dump($this);
 	}
 
+	private $_args          = [];
 	private $levelsCache    = [];
 	private $defaultOptions = [
-		'transformCustomExpr' => '/\{\{(.+)\}\}/',
-		'transformVarExpr'    => '/@\$([a-zA-Z0-9_]+)(\([^\)]*\))?/',
-		'transformFnExpr'     => '/@(([a-zA-Z0-9_]+)?\((\'[^\']*\'|"[^"]*"|[^\)])*\))/',
+		'transformCustomExpr'     => '/\{\{(.+)\}\}/',
+		'transformVarExpr'        => '/@\$([\w->]+)(\([^\)]*\))?/',
+		'transformFnExpr'         => '/@(([\w->]+)?\((\'[^\']*\'|"[^"]*"|[^\)])*\))/',
 
-		'alias'               => 'RT',
-		'name'                => '',
-		'levels'              => [],
-		'rootLevels'          => [],
-		'browseLevel'         => '',
-		'currentLevelDeep'    => -1,
+		'alias'                   => 'RT',
+		'name'                    => '',
+		'levelList'               => [],
+		'rootLevels'              => [],
+		'currentLevelDeep'        => -1,
 
-		'pathToRoot'          => null,
-		'pathToWebRoot'       => '/',
-		'pathToLevel'         => './',
-		'pathToWebLevel'      => '',
-		'pathToComponent'     => './component/',
-		'pathToWebComponent'  => 'component/',
-		'templateFileName'    => '__template.php',
-		'fileExtension'       => '.php',
+		'pathToRootFolder'        => null,
+		'pathToComponentFolder'   => 'component',
 
-		'chunks'              => [],
+		'pathToWebRoot'           => '/',
+		'pathToWebComponent'      => 'component/',
 
-		'appLog'              => [],
-		'printLog'            => false,
+		'templateFileName'        => '__template.php',
+		'fileExtension'           => '.php',
 
-		'errorLog'            => [],
-		'printErrorLog'       => true,
+		'chunks'                  => [],
 
-		'printFileLog'        => ''
+		'appLog'                  => [],
+		'printLog'                => false,
+
+		'errorLog'                => [],
+		'printErrorLog'           => true,
+
+		'printFileLog'            => ''
 	];
 
 
 	public function path( $file ){
-		return $this->pathToRoot . $file;
+		return $this->pathToRootFolder . '/' . $file;
 	}
 	public function file( $file ){
 		$this->log( "file: $file" );
@@ -126,26 +114,100 @@ Class rTemplater {
 		return $this->renderLevel() . $this->renderLogs();
 	}
 
-	public function renderLevel( $levelsList = null ){
+	public function renderLevel( $levelList = null ){
 
-		if( $levelsList === null )
-			$levelsList = $this->levels;		
+		if( $levelList === null )
+			$levelList = $this->levelList;		
 
-		$levelsSlug = implode( ',', $levelsList );
+		$levels = $this->levelsInfo( $levelList );
+
+		if( $levels->error )
+			return renderError( $levels->error );
+
+		$level = $levels->current;
+
+		if( $level->error )
+			return renderError( $level->error );
+
+		if( $this->levelList == $levels->list ){
+			$this->levels = $levels;
+			$this->level = $level;
+		}
+
+		//var_dump( $levels );
+		//var_dump( $level );
+
+		if( $level->canTemplate ){
+			$this->log( "renderLevel($level->deep): template: $level->templatePath" );
+
+			$level->canTemplate = false;
+			return $this->render( $level->templatePath );
+		}
+		else if( $level->isLastLevel ){
+
+			if( $levels->isBrowse )
+				return $this->generate( 'browse-folder', $level->path );
+
+			else if( $level->isPageExists ){
+				$this->log( "renderLevel($level->deep): page: $level->pagePath" );
+
+				return $this->render( $level->pagePath );
+			}
+			else
+				return $this->renderError( "404 - PAGE Not Found: $level->path" );
+		}
+		else if( $level->isNextTemplateExists || $level->isNextPageExists ){
+
+			if( $level->isNextTemplateExists )
+				$this->log( "renderLevel($level->deep): detect next template: $level->nextTemplatePath" );
+
+			else if( $level->isNextPageExists )
+				$this->log( "renderLevel($level->deep): detect next page: $level->nextPagePath" );
+
+			$levels->deep++;
+			return $this->renderLevel( $levels->list );
+		}
+
+		else if( $levels->count - $levels->deep <= 2 && !$level->isNextPageExists )
+			return $this->renderError( "404 - PAGE Not Found: $level->nextPath" );
+
+		else
+			return $this->renderError( "404 - Not Found logic in path: $level->path" );
+	}
+
+	public function levelsInfo( $levelList ){
+		if( is_string( $levelList ) )
+			$levelList = explode( '/', $this->levelList );
+
+		$formatedList = [];
+		foreach( $levelList as $level )
+			$formatedList[] = str_replace( '/', '', $level );
+
+		$levelList = $formatedList;
+
+		$lastLevelIndex = count( $levelList ) - 1;
+		$isBrowseLastLevel = $levelList[ $lastLevelIndex ] == '';
+		if( $isBrowseLastLevel )
+			unset( $levelList[ $lastLevelIndex ] );
+
+		$levelsSlug = implode( '/', $levelList );
+
+		$this->log( "levelsInfo: $levelsSlug" );
 
 		if( isset( $this->levelsCache[ $levelsSlug ] ) )
 			$levels = $this->levelsCache[ $levelsSlug ];
 
 		else {
-			$levels          = new stdClass();
-			$levels->list    = $levelsList;
-			$levels->slug    = $levelsSlug;
-			$levels->count   = count( $levelsList );
-			$levels->first   = $levelsList[ 0 ];
-			$levels->last    = $levelsList[ $levels->count - 1 ];
-			$levels->eq      = [];
-			$levels->deep    = 0;
-			$levels->error   = '';
+			$levels            = new stdClass();
+			$levels->list      = $levelList;
+			$levels->slug      = $levelsSlug;
+			$levels->count     = count( $levelList );
+			$levels->first     = $levelList[ 0 ];
+			$levels->last      = $levelList[ $levels->count - 1 ];
+			$levels->isBrowse  = $isBrowseLastLevel;
+			$levels->eq        = [];
+			$levels->deep      = 0;
+			$levels->error     = '';
 
 			if( $levels->count < 1 )
 				$levels->error = "Number of levels is less than 1";
@@ -199,82 +261,7 @@ Class rTemplater {
 
 		$levels->current = $level;
 
-		//var_dump( $levels );
-		//var_dump( $level );
-
-		if( $level->canTemplate ){
-			$this->log( "renderLevel($level->deep): template: $level->templatePath" );
-
-			$level->canTemplate = false;
-			return $this->render( $level->templatePath );
-		}
-		else if( $level->isLastLevel ){
-
-			if( $this->browseLevel )
-				return $this->generate( 'browse-folder', $level->path );
-
-			else if( $level->isPageExists ){
-				$this->log( "renderLevel($level->deep): page: $level->pagePath" );
-
-				return $this->render( $level->pagePath );
-			}
-			else
-				return $this->renderError( "404 - PAGE Not Found: $level->path" );
-		}
-		else if( $level->isNextTemplateExists || $level->isNextPageExists ){
-
-			if( $level->isNextTemplateExists )
-				$this->log( "renderLevel($level->deep): detect next template: $level->nextTemplatePath" );
-
-			else if( $level->isNextPageExists )
-				$this->log( "renderLevel($level->deep): detect next page: $level->nextPagePath" );
-
-			$levels->deep++;
-			return $this->renderLevel( $levels->list );
-		}
-
-		else if( $levels->count - $levels->deep <= 2 && !$level->isNextPageExists )
-			return $this->renderError( "404 - PAGE Not Found: $level->nextPath" );
-
-		else
-			return $this->renderError( "404 - Not Found logic in path: $level->path" );
-
-
-		return '';//////////////////////////////////////////////////////////
-
-		if( $level->name == $this->lastLevel ){
-			if( $this->browseLevel )
-				return $this->generate( 'browse-folder', $level->path );
-
-			else if( $level->isPageExists )
-				return $this->render( $level->pagePath );
-
-			else{
-				return $this->renderPage( 'rtemplater/browse', [ 'error'=> 404, 'errorPath'=>$level->pagePath ]);
-			}
-		}
-
-		else if( $level->isNextTemplateExists )
-			return $this->render( $level->nextTemplatePath );
-
-		else
-			return $this->renderPage( 'rtemplater/browse', [ 'error'=> 403, 'errorPath'=>$level->pagePath ]);
-
-		return null;
-	}
-
-	public function levelInfo( $deep ){
-		$this->log( "levelInfo: $deep" );
-
-		$level                          = new stdClass();
-		$level->deep                    = $deep;
-		$level->name                    = $this->levels[ $level->deep - 1 ];
-		$level->path                    = join( array_slice( $this->levels, 0, $level->deep ), '/' );
-		$level->pagePath                = $level->path . $this->fileExtension;
-		$level->isPageExists            = $this->isFile( $level->pagePath );
-		$level->nextTemplatePath        = $level->path . '/' . $this->templateFileName;
-		$level->isNextTemplateExists    = $this->isFile( $level->nextTemplatePath );
-		return $level;
+		return $levels;
 	}
 
 	public function renderPage( $path = null, $args = [] ){
@@ -298,8 +285,9 @@ Class rTemplater {
 			$args = [ 'content' => $args ];
 
 		ob_start();
-		extract( $args );
 		global ${$this->alias};
+		$this->_args = $args;
+		extract( $args );
 		eval( ' ?>' . $text . '<?php ' );
 		$text = ob_get_contents();
 		ob_end_clean();
@@ -318,12 +306,14 @@ Class rTemplater {
 		$this->log( "renderError" );
 
 		if( is_string( $args ) )
-			$this->errorLog[] = $args;
+			$args = [ 'message'=>$args ];
 
 		return $this->renderPage( 'rtemplater/browse', $args );
 	}
 
 	public function renderLogs(){
+		$this->log( "renderLogs" );
+
 		$content = '';
 		$popUpErrors = $this->printErrorLog ? $this->errorLog : [];
 
@@ -360,6 +350,8 @@ Class rTemplater {
 	public function transformToPHP( $text ){
 		$this->log( "transformToPHP" );
 
+		//echo "transformToPHP: $text" ;
+
 		$text = preg_replace_callback(
 			$this->transformCustomExpr,
 			function( $matches ){
@@ -372,12 +364,16 @@ Class rTemplater {
 			$this->transformVarExpr,
 			function( $matches ){
 				if( isset( $this->{$matches[ 1 ]} ) )
-					return $this->{$matches[ 1 ]};
+					$result = $this->{$matches[ 1 ]};
 				else
-					return '<?php echo ' . 
+					$result = '<?php echo ' . 
 						'isset( $' . $matches[ 1 ] . ' ) ? $' . $matches[ 1 ] . ' : ' .
 						( isset( $matches[ 2 ] ) ? $matches[ 2 ] : '""' ) .
 					';?>';
+
+				//var_dump($result,$matches);
+
+				return $result;
 			},
 			$text
 		);
@@ -407,7 +403,12 @@ Class rTemplater {
 
 	public function renderComponent( $name, $args = [] ){
 		$this->log( "renderComponent: $name" );
-		return $this->render( $this->pathToComponent . $name . $this->fileExtension, $args );
+		return $this->render( $this->pathToComponentFolder . '/' . $name . $this->fileExtension, $args );
+	}
+
+	public function addError( $err ){
+		$this->log( "addError: $err" );
+		$this->errorLog[] = $err;
 	}
 
 	public function log( ...$args ){
@@ -437,14 +438,14 @@ Class rTemplater {
 
 		$resources = [];
 		foreach( $files as $file ){
-			preg_match( "/(.+\/)?(.+).php/", $file, $matches );
+			preg_match( "/(.+\/)?(.+)" . $this->fileExtension . "/", $file, $matches );
 			$name = $matches[ 2 ];
 			$resources[] = [
 				'name'   => $name,
 				'type'   => 'page',
 				'title'  => strtoupper( str_replace( '_', ' ', $name ) ),
-				'path'   => $this->pathToLevel . $directory . $name . $this->fileExtension,
-				'url'    => $this->pathToWebRoot . $this->pathToWebLevel . $directory . $name
+				'path'   => $directory . $name . $this->fileExtension,
+				'url'    => $this->pathToWebRoot . $directory . $name
 			];
 		}
 
@@ -462,8 +463,8 @@ Class rTemplater {
 						'name'   => $name,
 						'type'   => 'folder',
 						'title'  => strtoupper( str_replace( '_', ' ', $name ) ),
-						'path'   => $this->pathToLevel . $folderPath,
-						'url'    => $this->pathToWebRoot . $this->pathToWebLevel . $directory . $name . '/'
+						'path'   => $folderPath,
+						'url'    => $this->pathToWebRoot . $directory . $name . '/'
 					];
 					$resources = array_merge( $resources, $folderResources );
 				}
@@ -471,6 +472,11 @@ Class rTemplater {
 		}
 
 		return $resources;
+	}
+
+	public function args( $key, $args = null ){
+		$args = $args === null ? $this->_args : $args;
+		return isset( $args[ $key ] ) ? $args[ $key ] : ( isset( $_GET[ $key ] ) ? $_GET[ $key ] : '' );
 	}
 
 	public function url( $name = '', $type = 'page', $section = null ){
@@ -518,7 +524,7 @@ Class rTemplater {
 				break;
 
 			case 'folder-slug':
-				$content = implode( $this->levels, '-' );
+				$content = implode( $this->levelList, '-' );
 				break;
 
 			case 'browse-folder':
@@ -528,13 +534,13 @@ Class rTemplater {
 
 			case 'page-title':
 				$content = strtoupper( $this->name );
-				if( $this->lastLevel != 'browse' ){
+				if( $this->levels->last != 'browse' ){
 
-					if( $this->firstLevel )
-						$content = ( $content ? $content . ' ' : '' ) . strtoupper( $this->firstLevel );
+					if( $this->levels->first && $this->levels->first != 'rtemplater' )
+						$content = ( $content ? $content . ' ' : '' ) . strtoupper( $this->levels->first );
 
-					if( $this->lastLevel && $this->lastLevel != $this->firstLevel )
-						$content = ( $content ? $content . ' ' : '' ) . $this->lastLevel;
+					if( $this->levels->last && $this->levels->last != $this->levels->first )
+						$content = ( $content ? $content . ': ' : '' ) . $this->levels->last;
 				}
 				break;
 

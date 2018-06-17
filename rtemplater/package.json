@@ -1,9 +1,23 @@
 {
   "name": "rtemplater",
   "version": "0.0.9",
-  "description": "Simple PHP templater",
-  "main": "",
+  "description": "The simplest templateR in the world!",
+  "main": "index.js",
   "scripts": {},
   "author": "Alex Regent",
-  "license": "MIT"
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/xregent/rtemplater.git"
+  },
+  "keywords": [
+    "html",
+    "js",
+    "simple",
+    "template"
+  ],
+  "bugs": {
+    "url": "https://github.com/xregent/rtemplater/issues"
+  },
+  "homepage": "https://github.com/xregent/rtemplater#readme"
 }

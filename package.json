@@ -6,7 +6,7 @@
 		"rtemplater": {
 			"name": "apptemplater",
 			"rootLevels": [ "main", "test", "test-level-1" ],
-			"printLog" : false,
+			"printLog" : 0,
 			"printFileLog" : "/files/build/dev.log.html"
 		},
 
@@ -18,7 +18,8 @@
 			"production": [
 				"https://cdnjs.cloudflare.com/ajax/libs/Swiper/4.3.0/css/swiper.min.css",
 				"/files/build/main.min.css"
-			]
+			],
+			"WYSIWYG": "/files/build/main.dev.css"
 		},
 
 		"scripts": {

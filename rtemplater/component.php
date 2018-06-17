@@ -1,11 +1,57 @@
-@component( $_GET[ 'component' ] )
-<div style="padding-top:20px;">
-<textarea rows="20" style="
-	display: block;
-	width: 100%;
-	padding: 20px;
-	font-size: 20px;
-	border: 0;
-	border-top: 20px solid black;
-">@component( $_GET[ 'component' ] )</textarea>
-</div>
+<?php
+	
+	$components = $this->scanFolder( $this->pathToComponentFolder );
+	$singleComponent = $this->args( 'component' );
+	$singleComponentData = null;
+	$content = '';
+
+	if( $singleComponent ){
+
+		foreach( $components as $component ){
+			if( $component['name'] == $singleComponent )
+				$singleComponentData = $component;
+
+			$content .= '<a id="'.$component['name'].'" href="'.$component['url'].'" class="btn btn-primary btn-success">'.$component['name'].'</a>';
+		}
+
+		if( !$singleComponentData ){
+			$this->addError( "Component \"$singleComponent\" Not Found!" );
+			$content = $content ? '<br><br><br><br><br>All Components:<br><br>' . $content : '';
+		}
+	}
+
+	if( $singleComponent ){
+		if( $singleComponentData ){
+			$componentName = $component['name'];
+			$componentUrl = $component['url'];
+			$componentHTML = $this->render( $component['path'] );
+
+			echo '<div>' . $componentHTML . '</div>';
+			echo '<div class="component-code"><textarea>' . $componentHTML . '</textarea></div>';
+		}
+
+		else if( $content )
+			echo '<div class="container -component-not-found">' . $content . '</div>';
+	}
+
+	else
+		foreach( $components as $component ){
+			$componentName = $component['name'];
+			$componentUrl = $component['url'];
+			$componentHTML = $this->render( $component['path'] );
+
+			if( $component['type'] == 'page' ){
+				echo '<a id="'.$componentName.'" href="'.$componentUrl.'" class="component-name">'.$componentName.'</a>';
+				echo '<div class="component-code"><textarea>'.$componentHTML.'</textarea></div>';
+				echo '<div>'.$componentHTML.'</div>';
+			}
+		}
+?>
+
+<script>
+document.addEventListener( "DOMContentLoaded", function(){
+	$( '.component-code textarea' ).each(function(){
+		$( this ).css( 'height', this.scrollHeight + 10 );
+	});
+});
+</script>
