@@ -5,17 +5,7 @@
 }
 
 %animation {
-	transition: $animation-time all $animation-type;
-}
-
-%border-link {
-	@extend .decoration-none;
-	border-bottom: 1px solid;
-	transition: $animation-time border-bottom-color;
-
-	&:hover {
-		border-bottom-color: transparent;
-	}
+	@include animation;
 }
 
 %bold {
@@ -26,17 +16,65 @@
 	@extend .decoration-none;
 }
 
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
+.container-full {
+	> * {
+		@extend .row-container;
+	}
+}
+.container {
+	max-width: map-get( $container-max-widths, 'xl' );
+}
+.row-container {
+	@extend .row, .px-0;
+	width: calc( 100% + #{$grid-gutter-width} );
+}
+.row-container-max {
+	@extend .container, .row, .px-0;
+	margin: 0 auto;
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
+.bg-center {
+	background-position: center center;
+}
+.bg-no-repeat {
+	background-repeat: no-repeat;
+}
+
+.f-default {
+	font-size: rem( $font-size-base-value );
+}
+.w-auto {
+	width: auto;
+}
+.h-auto {
+	height: auto;
+}
+
+.absolute-center {
+	left: 50%;
+	top: 50%;
+	@include translate( -50%, -50% );
+}
+.reset-button {
+	background: transparent;
+	border: 0;
+}
+
+.hover {
+	@include hover {
+		opacity: 0.9;
+	}
+}
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 @each $value in $font-sizes {
 	.f-#{""+$value} {
 		@include font( $value );
-	}
-}
-@each $icon in $icons {
-	.icon-#{""+nth($icon, 1)} {
-		@include inline-image( nth($icon, 2), nth($icon, 3), nth($icon, 4) );
 	}
 }
 @each $name, $color in $colors {
@@ -48,96 +86,76 @@
 		@include color( $name, true );
 	}
 }
-@each $weight in $font-weight {
-	.weight-#{""+$weight} {
-		@include weight( $weight, true );
+@each $value in $font-weight {
+	.value-#{""+$value} {
+		@include weight( $value, true );
 	}
 }
-@each $height in $line-height {
-	.line-height-#{""+$height} {
-		@include line-height( $height, true );
+@each $value in $line-height {
+	.line-height-#{""+$value} {
+		@include line-height( $value, true );
 	}
 }
-@each $decoration in $text-decoration {
-	.decoration-#{""+$decoration} {
-		@include decoration( $decoration );
+@each $value in $text-decoration {
+	.decoration-#{""+$value} {
+		@include decoration( $value );
 	}
 }
 @each $value in $bg-size {
 	.bg-size-#{""+$value} {
-		@include bg-size( $value );
+		@include bg-size( $value, true );
 	}
 }
-////////////////////////////////////////////////////////////////////////////////////////////////////
-.f-default {
-	font-size: rem( $font-size-base-value );
-}
-.w-auto {
-	width: auto;
-}
-.h-auto {
-	height: auto;
-}
-
-.hover {
-	&:hover {
-		opacity: 0.9;
+@each $value in $bg-size {
+	.overflow-#{""+$value} {
+		@include overflow( $value, true );
 	}
 }
-.line-through {
-	text-decoration: line-through;
-}
+@each $icon in $icons {
+	.icon-#{""+nth($icon, 1)} {
+		@include inline-image( nth($icon, 2), nth($icon, 3), nth($icon, 4) );
 
-.absolute-center {
-	left: 50%;
-	top: 50%;
-	transform: translate3d( -50%, -50%, 0 );
-}
-.reset-button {
-	background: transparent;
-	border: 0;
-}
-.bg-center-no-repeat {
-	background-position: center center;
-	background-repeat: no-repeat;
-	//background-size: contain;
+		@if length($icon) > 4 {
+			$_size: nth($icon, 5);
+			@if $_size == true {
+				$_size: contain;
+			}
+			@include bg-size( $_size, 1 );
+		}
+	}
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 .coords-0 {
-	left: 0 !important;
-	right: 0 !important;
-	top: 0 !important;
-	bottom: 0 !important;
+	left: 0 im();
+	right: 0 im();
+	top: 0 im();
+	bottom: 0 im();
 }
 .left-0 {
-	left: 0 !important;
+	left: 0 im();
 }
 .right-0 {
-	right: 0 !important;
+	right: 0 im();
 }
 .top-0 {
-	top: 0 !important;
+	top: 0 im();
 }
 .bottom-0 {
-	bottom: 0 !important;
+	bottom: 0 im();
 }
 .sides-0 {
-	left: 0 !important;
-	right: 0 !important;
+	left: 0 im();
+	right: 0 im();
 }
 .ends-0 {
-	top: 0 !important;
-	bottom: 0 !important;
+	top: 0 im();
+	bottom: 0 im();
 }
 .coords-50 {
-	left: 50% !important;
-	right: 50% !important;
-	top: 50% !important;
-	bottom: 50% !important;
-}
-
-.overflow-hidden {
-	overflow: hidden;
+	left: 50% im();
+	right: 50% im();
+	top: 50% im();
+	bottom: 50% im();
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 .reset-list {

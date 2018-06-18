@@ -1,12 +1,17 @@
+////////////////////////////////////////////////////////////////////////////////////////////////////
 @function parseInt( $number ){
-	@if type-of( $number ) == 'number' and not unitless( $number ){
+	@if is-number( $number ) and not unitless( $number ){
 		@return $number/( $number * 0 + 1 );
 	}
 	@return $number;
 }
 
 @function rem( $px ){
-	@return #{parseInt($px)/$font-size-base-value}rem;
+	$newValue: parseInt($px);
+	@if not is-number($newValue) {
+		@return $px;
+	}
+	@return #{$newValue/$font-size-base-value}rem;
 }
 
 @function image( $file ){
@@ -14,5 +19,97 @@
 }
 
 @function _( $color-name ){
-	@return  color( $color-name );
+	$color: color( $color-name );
+	@if $color == null {
+		$color: $color-name;
+	}
+	@return $color;
 }
+
+@function bp( $bp ){
+	$bpValue: map-get( $custom-breakpoints, $bp );	
+	@if $bpValue == null {
+		@return $bp;
+	}
+	@return $bpValue;
+}
+
+@function is( $checkValue, $returnValue: null ){
+	@if $checkValue != null and $checkValue != false and $checkValue != 0 {
+		@if $returnValue == null {
+			@return true;
+		}
+		@return $returnValue;
+	}
+	@return null;
+}
+
+@function imp( $checkValue: true ){
+	@if is( $checkValue ) {
+		@return !important;
+	}
+	@return null;
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+@function str-split( $string, $separator ){
+	$split-arr: ();
+	$index: str-index( $string, $separator );
+	@while $index != null {
+		$item: str-slice( $string, 1, $index - 1 );
+		$split-arr: append( $split-arr, $item );
+		$string: str-slice( $string, $index + 1 );
+		$index: str-index( $string, $separator );
+	}
+	$split-arr: append($split-arr, $string);
+	@return $split-arr;
+}
+////////////////////////////////////////////////////////////////////////////////////////////////////
+@function is-number($value) {
+	@return type-of($value) == 'number';
+}
+ 
+@function is-time($value) {
+	@return is-number($value) and index('ms' 's', unit($value)) != null;
+}
+ 
+@function is-duration($value) {
+	@return is-time($value);
+}
+ 
+@function is-angle($value) {
+	@return is-number($value) and index('deg' 'rad' 'grad' 'turn', unit($value)) != null;
+}
+ 
+@function is-frequency($value) {
+	@return is-number($value) and index('Hz' 'kHz', unit($value)) != null;
+}
+ 
+@function is-integer($value) {
+	@return is-number($value) and round($value) == $value;
+}
+ 
+@function is-relative-length($value) {
+	@return is-number($value) and index('em' 'ex' 'ch' 'rem' 'vw' 'vh' 'vmin' 'vmax', unit($value)) != null;
+}
+ 
+@function is-absolute-length($value) {
+	@return is-number($value) and index('cm' 'mm' 'in' 'px' 'pt' 'pc', unit($value)) != null;
+}
+ 
+@function is-percentage($value) {
+	@return is-number($value) and unit($value) == '%';
+}
+ 
+@function is-length($value) {
+	@return is-relative-length($value) or is-absolute-length($value);
+}
+ 
+@function is-resolution($value) {
+	@return is-number($value) and index('dpi' 'dpcm' 'dppx', unit($value)) != null;
+}
+ 
+@function is-position($value) {
+	@return is-length($value) or is-percentage($value) or index('top' 'right' 'bottom' 'left' 'center', $value) != null;
+}
+////////////////////////////////////////////////////////////////////////////////////////////////////

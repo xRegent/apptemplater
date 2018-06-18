@@ -5,36 +5,60 @@ $path-images: $path-files + 'images/';
 $path-images-backgrounds: $path_images + 'bg/';
 
 $site-width: 1200px;
-$site-min-width: 375px;
+$site-min-width: 320px;
 $grid-gutter-width: 30px;
 $grid-padding: $grid-gutter-width / 2;
 $container-max-widths: (
+	//sm: 540px,
+	//md: 720px,
+	//lg: 960px,
 	xl: 1200px
 );
+$grid-breakpoints: (
+	xs: 0,
+	//sm: 576px,
+	md: 768px,
+	//lg: 992px,
+	//xl: 1200px
+);
+$custom-breakpoints: (
+	xs: 0,
+	sm: 576px,
+	md: 768px,
+	lg: 992px,
+	xl: 1200px,
 
-$font-family-sans-serif: 'Open Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+	mobile-menu: 950px
+);
+
+$font-family-sans-serif: 'Rubik', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
 $font-family-base: $font-family-sans-serif;
-$font-size-base-value: 14;
+$font-size-base-value: 18;
 $font-size-base-px: #{$font-size-base-value}px;
 $font-size-body: 1rem;
-$font-sizes: ( 0, 12, 18, 24 );
+$font-sizes: ( 0, 20, 24, 30, 36, 40, 48 );
 $font-weight: ( 300, 400, 500, 700, 900 );
-$line-height: ( 18 );
-$text-decoration: ( none, underline );
+$line-height: ( 32 );
+$text-decoration: ( none, underline, line-through );
 $bg-size: ( contain, cover, auto );
 
 $color-white: #FFF;
 $color-black: #000;
-$color-default: #111;
-$color-blue: #579BE0;
+$color-default: #496070;
+$color-blue: #306AA4;
 $color-primary: $color-blue;
-$color-gray: #CCC;
-$color-secondary: $color-gray;
+$color-blue-2: #579BE0;
+$color-secondary: $color-blue-2;
+$color-gray: #ECF0F4;
+$color-gray-2: #F5F7FA;
 $_colors: (
 	white: $color-white,
 	black: $color-black,
 	blue: $color-blue,
-	gray: $color-gray
+	blue-2: $color-blue-2,
+	gray: $color-gray,
+	gray-2: $color-gray-2,
+	header-blue: #1368BE
 );
 $_theme-colors: (
 	'primary': $color-primary,
@@ -42,8 +66,21 @@ $_theme-colors: (
 );
 
 $icons: (
-	//( 'name-1', 'icons/name-1.png', 18px, 18px ), // .icon.icon-name-1
-	//( 'name-2', 'icons/name-2.png', 36px, 36px ), // .icon.icon-name-2
+	( 'bullet-ok', 'icons/bullet-ok.png', 18px, 18px ),
+	( 'methodology-1', 'icons/methodology-1.svg', 102px, 90px ),
+	( 'methodology-2', 'icons/methodology-2.svg', 106px, 110px ),
+	( 'methodology-3', 'icons/methodology-3.svg', 102px, 102px ),
+	( 'methodology-4', 'icons/methodology-4.svg', 88px, 95px ),
+	( 'methodology-5', 'icons/methodology-5.svg', 140px, 81px ),
+	( 'service-customerx', 'icons/service-customerx.svg', 300px, 210px ),
+	( 'service-sales', 'icons/service-sales.svg', 300px, 210px ),
+	( 'service-industries', 'icons/service-industries.svg', 300px, 210px ),
+	( 'checkbox-check', 'icons/checkbox-check.png', 17px, 16px ),
+	( 'checkbox-empty', 'icons/checkbox-empty.png', 17px, 16px ),
+	( 'video-play', 'icons/video-play.png', 48px, 48px ),
+	( 'arrow-left-white', 'icons/arrow-left-white.png', 46px, 44px ),
+	( 'arrow-bottom-white', 'icons/arrow-bottom-white.png', 40px, 20px ),
+	( 'hamburger', 'icons/hamburger.svg', 24px, 17px, true )
 );
 
 $animation-time: 1s;

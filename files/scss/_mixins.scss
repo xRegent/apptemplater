@@ -1,63 +1,67 @@
 ////////////////////////////////////////////////////////////////////////////////////////////////////
-@mixin font( $value, $isImportant: 0 ){
-	@if $isImportant {
-		font-size: rem( $value ) !important;
+@mixin font( $value, $isImportant: null ){
+	font-size: rem( $value ) im($isImportant);
+}
+@mixin color( $value, $isImportant: null ){
+	color: _( $value ) im($isImportant);
+}
+@mixin weight( $value, $isImportant: null ){
+	font-weight: $value im($isImportant);
+}
+@mixin line-height( $value, $isImportant: null ){
+	line-height: rem($value) im($isImportant);
+}
+@mixin decoration( $value, $isImportant: null ){
+	&, &:hover {text-decoration: $value im($isImportant);}
+}
+@mixin bg-size( $value, $isImportant: null ){
+	background-size: $value im($isImportant);
+}
+@mixin align( $value, $isImportant: null ){
+	text-align: $value im($isImportant);
+}
+@mixin display( $value, $isImportant: true ){
+	display: $value im($isImportant);
+}
+@mixin overflow( $value, $isImportant: true ){
+	overflow: $value im($isImportant);
+}
+////////////////////////////////////////////////////////////////////////////////////////////////////
+@mixin animation( $cssParam: all, $time: null, $type: null ){
+	@if $time == null {$time:$animation-time}
+	@if $type == null {$type:$animation-type}
+	transition: $time $cssParam $type;
+}
+
+@mixin translate( $x: 0, $y: 0, $z: 0, $additionalParams: null ){
+	transform: translate3d( $x, $y, $z ) is($additionalParams);
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+@mixin bg( $file, $params: null ){
+	@if $params {
+		background: url( image( $file ) ) $params;
 	}
 	@else {
-		font-size: rem( $value );
+		background-image: url( image( $file ) );
 	}
 }
-@mixin color( $value, $isImportant: 0 ){
-	@if $isImportant {
-		color: color( $value ) !important;
-	}
-	@else {
-		color: color( $value );
+@mixin bg-color( $color-name, $isImportant: null ){
+	background-color: _( $color-name ) im($isImportant);
+}
+////////////////////////////////////////////////////////////////////////////////////////////////////
+@mixin hover(){
+	&:hover {
+		@content;
 	}
 }
-@mixin weight( $value, $isImportant: 0 ){
-	@if $isImportant {
-		font-weight: $value !important;
-	}
-	@else {
-		font-weight: $value;
-	}
-}
-@mixin line-height( $value, $isImportant: 0 ){
-	@if $isImportant {
-		line-height: rem( $value ) !important;
-	}
-	@else {
-		line-height: rem( $value );
-	}
-}
-@mixin decoration( $value, $isImportant: 0 ){
-	@if $isImportant {
-		&, &:hover {
-			text-decoration: $value !important;
-		}
-	}
-	@else {
-		&, &:hover {
-			text-decoration: $value;
-		}
-	}
-}
-@mixin bg-size( $value, $isImportant: 0 ){
-	@if $isImportant {
-		background-size: $value !important;
-	}
-	@else {
-		background-size: $value;
-	}
-}
-@mixin align( $value, $isImportant: 0 ){
-	@if $isImportant {
-		text-align: $value !important;
-	}
-	@else {
-		text-align: $value;
-	}
+////////////////////////////////////////////////////////////////////////////////////////////////////
+@mixin inline-image( $file, $width, $height ){
+	@extend .bg-center, .bg-no-repeat;
+	@include bg( $file );
+	@include display( inline-block );
+	width: $width;
+	height: $height;
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 @mixin before( $content: '' ){
@@ -85,41 +89,5 @@
 		position: absolute;
 		@content;
 	}
-}
-////////////////////////////////////////////////////////////////////////////////////////////////////
-@mixin bg( $file, $params: null ){
-	@if $params {
-		background: url( image( $file ) ) $params;
-	}
-	@else {
-		background-image: url( image( $file ) );
-	}
-}
-@mixin bg-color( $color-name, $isImportant: 0 ){
-	@if $isImportant {
-		background-color: color( $color-name ) !important;
-	}
-	@else {
-		background-color: color( $color-name );
-	}
-}
-@mixin hover(){
-	//&:hover, &:focus {
-	&:hover {
-		@content;
-	}
-}
-
-@mixin border-link( $color ){
-	@extend %border-link;
-	color: $color;
-	border-bottom-color: $color;
-}
-
-@mixin inline-image( $file, $width, $height ){
-	@extend .d-inline-block, .bg-center-no-repeat;
-	@include bg( $file );
-	width: $width;
-	height: $height;
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////

@@ -58,7 +58,6 @@ Class rTemplater {
 		'name'                    => '',
 		'levelList'               => [],
 		'rootLevels'              => [],
-		'currentLevelDeep'        => -1,
 
 		'pathToRootFolder'        => null,
 		'pathToComponentFolder'   => 'component',
