@@ -55,3 +55,5 @@ document.addEventListener( "DOMContentLoaded", function(){
 	});
 });
 </script>
+
+@renderPage( 'rtemplater/__styles' )

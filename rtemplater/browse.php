@@ -68,3 +68,5 @@
 	echo $content ? '<div class="-level-block">' . PHP_EOL . $content . PHP_EOL . '</div>' : '';
 ?>	
 </div>
+
+@renderPage( 'rtemplater/__styles' )

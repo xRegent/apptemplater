@@ -6,8 +6,8 @@
 		"rtemplater": {
 			"name": "apptemplater",
 			"rootLevels": [ "main", "test", "test-level-1" ],
-			"printLog" : 0,
-			"printFileLog" : "/files/build/dev.log.html"
+			"printLog" : false,
+			"printFileLog" : "/files/build/log/dev.txt"
 		},
 
 		"styles": {
@@ -43,20 +43,32 @@
 			"folder": "/files/build",
 
 			"watch": {
+				"/files/scss/config.json": [ "config" ],
 				"/files/scss/*.scss": [ "dev/production" ],
 				"/files/js/*.js": [ "production" ]
 			},
 
 			"tasks": {
 
-				"default": [ "dev/production" ],
+				"default": [ "config", "dev", "production" ],
+
+				"config": [
+					{
+						"fs_src": "/files/scss/config.json",
+						"log": "/files/build/log/dev.txt",
+						"jsonSass": {
+							"prefix": "$app: "
+						},
+						"fs_result": "/files/scss/_config.scss"
+					}
+				],
 
 				"dev": [
 					{
 						"src": "/files/scss/builder.scss",
 						"sass": true,
-						"sourcemaps": true,
-						"log": "/files/build/dev.log.html",
+						"sourcemaps": false,
+						"log": "/files/build/log/dev.txt",
 						"autoprefixer": {
 							"browsers": [ "last 2 versions" ],
 							"cascade": false
@@ -71,7 +83,7 @@
 
 						"src": "/files/scss/builder.scss",
 						"sass": true,
-						"log": "/files/build/dev.log.html",
+						"log": "/files/build/log/dev.txt",
 						"autoprefixer": {
 							"browsers": [ "last 2 versions" ],
 							"cascade": false
@@ -123,7 +135,8 @@
 		"gulp-csso": "^3.0.1",
 		"gulp-uglify": "^3.0.0",
 		"gulp-sourcemaps": "^2.6.4",
-		"gulp-sass": "^4.0.1"
+		"gulp-sass": "^4.0.1",
+		"json-sass": "^1.3.5"
 	},
 	"devDependencies": {
 		"gulp": "^3.9.1",
@@ -133,6 +146,7 @@
 		"gulp-rename": "^1.2.3",
 		"gulp-sass": "^4.0.1",
 		"gulp-sourcemaps": "^2.6.4",
-		"gulp-uglify": "^3.0.0"
+		"gulp-uglify": "^3.0.0",
+		"json-sass": "^1.3.5"
 	}
 }

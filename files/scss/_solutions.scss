@@ -87,7 +87,7 @@
 	}
 }
 @each $value in $font-weight {
-	.value-#{""+$value} {
+	.weight-#{""+$value} {
 		@include weight( $value, true );
 	}
 }

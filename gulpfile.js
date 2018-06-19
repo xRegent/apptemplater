@@ -1,3 +1,5 @@
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
 var
 	package = require('./package.json'),
 	app = package.app,
@@ -11,7 +13,15 @@ var
 	autoprefixer = require('gulp-autoprefixer'),
 	rename = require('gulp-rename'),
 	uglify = require('gulp-uglify'),
+	//jsonSass = require('json-sass'),
+	through = require('through2'),
+	jsToSassString = require('json-sass/lib/jsToSassString'),
+
 	fs = require('fs'),
+	mkdirp = require('mkdirp'),
+	getDirName = require('path').dirname,
+
+	stream,// =  fs.createReadStream( new Buffer('buffer') ),
 
 	fixPath = function( path ){
 		return path.replace( /^\//, '' );
@@ -37,102 +47,187 @@ var
 		}
 	},
 
-	process = function( element ){
+	writeFile = function( path, contents, cb=(e)=>{} ){
+		mkdirp( getDirName(path), function (err){
+			if(err)
+				return cb(err);
+
+			fs.writeFile( path, contents, cb );
+		});
+	},
+
+	deleteFile = function( path, contents, cb=(e)=>{} ){
+		mkdirp( getDirName(path), function (err){
+			if(err)
+				return cb(err);
+
+			if( fs.existsSync( path ) )
+				fs.unlinkSync( path, contents, cb );
+		});
+	},
+
+	process = function( element, cb ){
 		//console.log( 'Gulp Process:', element );
 
-		let file;
+
+		let
+			file,
+			log_path = fixPath( element.log || '' ),
+			//log_dir = log_path.replace( /\/[^\/]*$/, '' ),
+			
+			jsLog_path = fixPath( element.jsLog || '' ),
+			//jsLog_dir = jsLog_path.replace( /\/[^\/]*$/, '' ),
+
+			cssLog_path = fixPath( element.cssLog || '' ),
+			//cssLog_dir = cssLog_path.replace( /\/[^\/]*$/, '' ),
+
+			stopProcess = function(){
+				console.log( '--- STOP GULP PROCESS ---' );
+			};
+		
+		if( log_path )
+			deleteFile( log_path );
+		
+		if( jsLog_path )
+			deleteFile( jsLog_path );
+		
+		if( cssLog_path )
+			deleteFile( cssLog_path );
 
 		if( element.clearFolder )
 			deleteFiles( fixPath( element.folder ), true );
 
+		if( element.fs_src )
+			file = fs.createReadStream( fixPath( element.fs_src ) );
+
 		if( element.src )
 			file = gulp.src( fixPath( element.src ) );
 
+		stream = file;
+
+		console.log( '| Gulp PROCESS fn: ', ( element.fs_src || element.src ) );
+
 		if( element.sourcemaps )
-			file = file.pipe( sourcemaps.init() );
+			stream = stream.pipe( sourcemaps.init() );
 
 		if( element.sass ){
 			let _sass = sass();
 
 			if( element.log || element.cssLog ){
-				let
-					log_path = fixPath( element.log || '' ),
-					log_dir = log_path.replace( /\/[^\/]*$/, '' ),
-					cssLog_path = fixPath( element.cssLog || '' ),
-					cssLog_dir = cssLog_path.replace( /\/[^\/]*$/, '' );
-
-				if( log_path && fs.existsSync( log_path ) )
-					fs.unlinkSync( log_path );
-
-				if( cssLog_path && fs.existsSync( cssLog_path ) )
-					fs.unlinkSync( cssLog_path );
 
 				_sass = _sass.on( 'error', function( err ){
 					
-					if( element.log ){
-						if( !fs.existsSync( log_dir ) )
-							fs.mkdirSync( log_dir );
+					if( element.log )
+						writeFile( log_path, err.message );
 
-						fs.writeFile( log_path, err.message, (e)=>{} );
-					}
-
-					if( element.cssLog ){
-						if( !fs.existsSync( cssLog_dir ) )
-							fs.mkdirSync( cssLog_dir );
-
-						fs.writeFile( cssLog_path, "/*\n" + err.message + "\n*/", (e)=>{} );
-					}
+					if( element.cssLog )
+						writeFile( cssLog_path, "/*\n" + err.message + "\n*/" );
 
 					sass.logError.call( this, err );
 				});
 			}
 
-			file = file.pipe( _sass );
+			stream = stream.pipe( _sass );
 		}
 
 		if( element.autoprefixer )
-			file = file.pipe(autoprefixer( element.autoprefixer ));
+			stream = stream.pipe(autoprefixer( element.autoprefixer ));
+
+		if( element.jsonSass )
+			stream = stream.pipe(through(function( chunk, enc, callback ){
+				try{
+					let
+						defaultOptions = {
+							prefix: '',
+							suffix: ';'
+						}
+						options = typeof element.jsonSass == 'object' ? element.jsonSass : defaultOptions,
+						jsValue = JSON.parse( chunk ),
+						sassString = jsToSassString( jsValue );
+					
+					sassString = ( options.prefix || defaultOptions.prefix ) +
+						sassString +
+						( options.suffix || defaultOptions.suffix );
+
+					this.push( sassString );
+					callback();
+				}
+				catch( err ){
+					//console.log( 'ERROR in JSON-TO-SASS: ', err );
+
+					var message = err.message + "\r\n" +
+						JSON.stringify( element )
+							.replace( /,/g, ",\r\n" )
+							.replace( /\}/g, "\r\n}" )
+							.replace( /\{/g, "{\r\n" );
+
+					console.log( 'ERROR in JSON-TO-SASS: ', message );
+
+					if( element.log )
+						writeFile( log_path, message );
+
+					if( element.jsLog )
+						writeFile( jsLog_path, 'alert(`' + message + '`);' );
+
+					//this.emit('error' , err);
+					//this.emit('end');
+
+					this.emit('end');
+				}
+			}));
 
 		if( element.rename )
-			file = file.pipe(rename( element.rename ));
+			stream = stream.pipe(rename( element.rename ));
 
 		if( element.minifyCSS )
-			file = file.pipe(minifyCSS( element.minifyCSS ));
+			stream = stream.pipe(minifyCSS( element.minifyCSS ));
 
 		if( element.uglify )
-			file = file.pipe(uglify());
+			stream = stream.pipe(uglify());
 
 		if( element.sourcemaps )
-			file = file.pipe( sourcemaps.write() );
+			stream = stream.pipe( sourcemaps.write() );
 
-		if( element.folder )
-			file = file.pipe(gulp.dest( fixPath( element.folder ) ));
+		if( element.fs_result )
+			stream = stream.pipe(through(function( chunk, enc, callback ){
+				writeFile( fixPath( element.fs_result ), chunk );
+				callback();
+			}));
 
-		return file;
+		else if( element.folder )
+			stream = stream.pipe(gulp.dest( fixPath( element.folder ) ));
+
+		return stream;
 	};
 ////////////////////////////////////////////////////////////////////////////////////////////////////
+
 Object.keys( options.tasks ).forEach(function( taskName ){
 	let task = options.tasks[ taskName ];
 	
-	gulp.task( taskName, function(){
+	gulp.task( taskName, function( cb ){
 		console.log( '|   Task: ' + taskName + '. Dubug: ' + !!app.debug );
 
-		return task.map(function( element ){
+		task.forEach(function( element ){
+
 			if( typeof element == 'string' )
-				return gulp.start( devOrProd( element ) );
+				gulp.start( devOrProd( element ) );
 
 			else if( typeof element == 'object' ){
 				if( !( 'folder' in element ) )
 					element.folder = options.folder;
 
-				return process( element );
+				process( element );
 			}
 		});
+
+		cb();
 	});
 });
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////
+
 if( options.watch ){
-	let watchFn = function(){
+	let watchFn = function( cb ){
 		Object.keys( options.watch ).forEach(function( fileName ){
 			let
 				tasks = options.watch[ fileName ].map(function( taskName ){
@@ -143,15 +238,22 @@ if( options.watch ){
 					)
 						return '';
 
-					gulp.start( taskName );
+					//gulp.start( taskName );
 					return taskName;
 				}),
-				watcher = gulp.watch( fixPath( fileName ), tasks );
+				path = fixPath( fileName ),
+				watcher = gulp.watch( path, tasks );
+
+			console.log( '| Gulp start watch:', path );
+
+			gulp.start( tasks );
 
 			watcher.on( 'change', function( event ){
-				console.log( '|   ' + event.type + ': ' + event.path );
+				console.log( '|   ' + event.type + ': ' + event.path + ' | Start:', tasks );
 			});
 		});
+
+		cb();
 	};
 
 	gulp.task( 'watch', watchFn );

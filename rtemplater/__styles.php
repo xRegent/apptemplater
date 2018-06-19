@@ -1,6 +1,3 @@
-@renderLevel()
-
-
 <style>
 	.-level-error {
 		font-size: 20px;

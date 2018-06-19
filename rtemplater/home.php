@@ -20,3 +20,5 @@
 	<hr>
 	<pre style="font-size: 22px;">@render('rtemplater/README.md')</pre>
 </div>
+
+@renderPage( 'rtemplater/__styles' )
